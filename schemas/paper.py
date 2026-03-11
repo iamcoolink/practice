@@ -3,7 +3,6 @@ from datetime import datetime
 from enum import Enum
 from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
-###
 
 class PaperStatusEnum(str, Enum):
     UPLOADED = "uploaded"
