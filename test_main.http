@@ -1,0 +1,148 @@
+# Test your FastAPI endpoints
+
+GET http://127.0.0.1:8000/
+Accept: application/json
+
+###
+
+GET http://127.0.0.1:8000/hello/User
+Accept: application/json
+
+###
+GET http://127.0.0.1:8000/mail/test?email=3163198546@qq.com
+
+
+### 获取邮箱验证码
+GET http://127.0.0.1:8000/auth/code?email=3163198546@qq.com
+
+###  注册
+POST http://127.0.0.1:8000/auth/register
+Content-Type: application/json
+
+{
+  "email":"3163198546@qq.com",
+  "username": "Mywork",
+  "password": "222222",
+  "confirm_password": "222222",
+  "code": "115194"
+
+}
+
+### 用于登录
+
+POST http://127.0.0.1:8000/auth/login
+Content-Type: application/json
+
+{
+  "email": "3163198546@qq.com",
+  "password": "222222"
+}
+
+> {%
+    // 将登录响应中的 access_token 保存为全局变量 auth_token!!!!!!!!
+    client.global.set("auth_token", response.body.token);
+%}
+
+###
+
+
+### 上传文本论文（需要 token）
+POST http://127.0.0.1:8000/paper/upload
+Authorization: Bearer {{auth_token}}
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="text"
+
+大模型Agent框架是基于大型语言模型（LLM）构建的智能系统，能够自主决策并执行复杂任务。该框架通常包括Profile、Memory、Planning和Action四个模块，每个模块都有其特定的功能和作用。Profile模块定义和管理Agent的特性和行为。它包含一系列参数和规则，描述了Agent的各种属性，如角色、目标、能力、知识和行为方式等。这些属性决定了Agent如何与环境交互，如何理解和响应任务，以及如何进行决策和规划。Profile模块可以通过LLM生成方法、数据集对齐方法和组合方法来生成代理的个人特征。
+Memory模块在Agent系统中扮演重要角色，它存储和组织从环境中获取的信息，以指导未来行动。内存模块通常包含短期记忆和长期记忆两个部分。短期记忆暂存最近的感知，长期记忆存储重要信息供随时检索。内存信息可以用自然语言表达，也可以编码为向量嵌入提高检索效率。
+Planning模块的主要任务是帮助Agent将复杂的任务分解为更易处理的子任务，并制定出有效的策略。它大致分为两种类型：不依赖反馈的计划和基于反馈的计划。不依赖反馈的计划有单路径推理和多路径推理等策略，而基于反馈的计划则根据任务执行后的反馈来调整计划。
+--WebAppBoundary
+Content-Disposition: form-data; name="title"
+
+论文测试
+--WebAppBoundary--
+
+> {%
+    // 保存返回的论文ID，供后续测试使用
+    client.global.set("paper_id", response.body.id);
+%}
+
+###
+
+###  上传PDF文件
+POST http://127.0.0.1:8000/paper/upload
+Authorization: Bearer {{auth_token}}
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="test.pdf"
+Content-Type: application/pdf
+
+< ./T35626207736.pdf
+--WebAppBoundary
+Content-Disposition: form-data; name="title"
+
+从PDF上传的论文
+--WebAppBoundary--
+
+> {%
+    // 打印完整响应，查看返回的字段
+    console.log(JSON.stringify(response.body, null, 2));
+    // 假设返回的论文ID字段名为 "id"
+    client.global.set("paper_id", response.body.id);
+%}
+
+###
+
+### 生成摘要（使用上面上传的论文ID）
+POST http://127.0.0.1:8000/paper/{{paper_id}}/summarize
+Authorization: Bearer {{auth_token}}
+
+###
+
+### 多轮对话提问的循环实现
+POST http://127.0.0.1:8000/paper/{{paper_id}}/chat
+Authorization: Bearer {{auth_token}}
+Content-Type: application/json
+
+{
+    "message": "这篇文章的主要研究什么？"
+}
+
+###
+
+### 获取对话历史
+GET http://127.0.0.1:8000/paper/{{paper_id}}/history
+Authorization: Bearer {{auth_token}}
+
+###
+
+### 列出我的所有论文
+GET http://127.0.0.1:8000/paper/list?skip=0&limit=10
+Authorization: Bearer {{auth_token}}
+
+### 获取关键词实体列表（首次将自动提取）
+GET http://127.0.0.1:8000/paper/{{paper_id}}/entities?refresh=true
+Authorization: Bearer {{auth_token}}
+
+### 生成思维导图
+GET http://127.0.0.1:8000/paper/{{paper_id}}/mindmap
+Authorization: Bearer {{auth_token}}
+
+### 获取笔记（自动生成）
+GET http://127.0.0.1:8000/paper/{{paper_id}}/note
+Authorization: Bearer {{auth_token}}
+
+### 手动更新笔记
+PUT http://127.0.0.1:8000/paper/{{paper_id}}/note
+Authorization: Bearer {{auth_token}}
+Content-Type: application/json
+
+{
+    "content": "这是我的手动编辑笔记内容..."
+}
+
+### 删除笔记
+DELETE http://127.0.0.1:8000/paper/{{paper_id}}/note
+Authorization: Bearer {{auth_token}}
